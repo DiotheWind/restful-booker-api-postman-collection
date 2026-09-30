@@ -1,0 +1,784 @@
+{
+  "info": {
+    "_postman_id": "c0a59223-b120-4288-a83e-115cc6ed25ae",
+    "name": "restful-booker",
+    "description": "This collection contains a list of tests and assertions for the restful-booker api. This serves as my portfolio to practice my skill in API testing.\n\n\\- Deo Seth S. Jabagat",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "34664642",
+    "_collection_link": "https://go.postman.co/collection/34664642-c0a59223-b120-4288-a83e-115cc6ed25ae?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "API health check",
+      "item": [
+        {
+          "name": "Check if API is up and running",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// The API should've returned a 200 status code, not a 201\r\npm.test(\"Status code is 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"Response time is less than 3000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(3000);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/ping",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "ping"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Create token",
+      "item": [
+        {
+          "name": "Create token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const response = pm.response.json();\r\n\r\nawait pm.vault.set(\"token\", response.token);\r\n\r\npm.test(\"Status code is 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"Response time is less than 3000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(3000);\r\n});\r\n\r\npm.test(\"Response returns a string of 15-character token\", function () {\r\n    pm.expect(response.token.length).to.eql(15);\r\n    pm.expect(response.token).to.be.a(\"string\");\r\n});\r\n\r\n"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "await pm.vault.set(\"username\", \"admin\");\r\nawait pm.vault.set(\"password\", \"password123\");"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"username\": \"{{vault:username}}\",\r\n    \"password\": \"{{vault:password}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/auth",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "auth"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Create requests",
+      "item": [
+        {
+          "name": "Create booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const response = pm.response.json();\r\nconst firstName = pm.collectionVariables.get(\"firstName\");\r\nconst lastName = pm.collectionVariables.get(\"lastName\");\r\n\r\npm.collectionVariables.set(\"bookingID\", response.bookingid);\r\n\r\n// The api should've returned 201 status code when creating a new booking, not a 200\r\npm.test(\"Status code is 201\", function () {\r\n    pm.response.to.have.status(201);\r\n});\r\n\r\npm.test(\"Response time is less than 3000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(3000);\r\n});\r\n\r\npm.test(\"Created booking have correct values\", function () {\r\n    pm.expect(response.booking.firstname).to.eql(firstName);\r\n    pm.expect(response.booking.lastname).to.eql(lastName);\r\n    pm.expect(response.booking.totalprice).to.eql(150);\r\n    pm.expect(response.booking.depositpaid).to.eql(true);\r\n    pm.expect(response.booking.bookingdates.checkin).to.eql(\"2018-01-15\");\r\n    pm.expect(response.booking.bookingdates.checkout).to.eql(\"2018-01-20\");\r\n    pm.expect(response.booking.additionalneeds).to.eql(\"Breakfast\");\r\n});\r\n\r\n\r\n\r\n"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const randomFirstName = pm.variables.replaceIn('{{\\$randomFirstName}}');\r\nconst randomLastName  = pm.variables.replaceIn('{{\\$randomLastName}}');\r\n\r\npm.collectionVariables.set(\"firstName\", randomFirstName);\r\npm.collectionVariables.set(\"lastName\", randomLastName);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"firstname\" : \"{{firstName}}\",\r\n    \"lastname\" : \"{{lastName}}\",\r\n    \"totalprice\" : 150,\r\n    \"depositpaid\" : true,\r\n    \"bookingdates\" : {\r\n        \"checkin\" : \"2018-01-15\",\r\n        \"checkout\" : \"2018-01-20\"\r\n    },\r\n    \"additionalneeds\" : \"Breakfast\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/booking",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create booking with lacking key/value pair",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// A 422 status code would probably be the best status code to send back\r\npm.test(\"Status code is either 422 or 400\", function () {\r\n    pm.expect(pm.response.code).to.be.oneOf([422, 400]);\r\n});\r\n\r\npm.test(\"Response time is less than 3000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(3000);\r\n});\r\n\r\n\r\n"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"firstname\" : \"{{firstName}}\",\r\n    \"lastname\" : \"{{lastName}}\",\r\n    \"totalprice\" : 150,\r\n    \"depositpaid\" : true,\r\n    \"bookingdates\" : {\r\n        \"checkin\" : \"2018-01-15\"\r\n    },\r\n    \"additionalneeds\" : \"Breakfast\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/booking",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Read requests",
+      "item": [
+        {
+          "name": "Get a specific booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const schema = {\r\n  \"type\": \"object\",\r\n  \"properties\": {\r\n    \"firstname\": {\r\n      \"type\": \"string\"\r\n    },\r\n    \"lastname\": {\r\n      \"type\": \"string\"\r\n    },\r\n    \"totalprice\": {\r\n      \"type\": \"number\"\r\n    },\r\n    \"depositpaid\": {\r\n      \"type\": \"boolean\"\r\n    },\r\n    \"bookingdates\": {\r\n      \"type\": \"object\",\r\n      \"properties\": {\r\n        \"checkin\": {\r\n          \"type\": \"string\"\r\n        },\r\n        \"checkout\": {\r\n          \"type\": \"string\"\r\n        }\r\n      },\r\n      \"required\": [\r\n        \"checkin\",\r\n        \"checkout\"\r\n      ]\r\n    },\r\n    \"additionalneeds\": {\r\n      \"type\": \"string\"\r\n    }\r\n  },\r\n  \"required\": [\r\n    \"firstname\",\r\n    \"lastname\",\r\n    \"totalprice\",\r\n    \"depositpaid\",\r\n    \"bookingdates\",\r\n    \"additionalneeds\"\r\n  ]\r\n};\r\nconst response = pm.response.json();\r\nconst firstName = pm.collectionVariables.get(\"firstName\");\r\nconst lastName = pm.collectionVariables.get(\"lastName\");\r\n\r\npm.test(\"Status code is 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\n// check if it returns the correct data like check the firstname or something\r\n\r\npm.test(\"Response time is less than 3000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(3000);\r\n});\r\n\r\npm.test(\"Response matches the JSON schema\", function () {\r\n    pm.response.to.have.jsonSchema(schema);\r\n});\r\n\r\npm.test(\"The correct booking is returned\", function () {\r\n    pm.expect(response.firstname).to.eql(firstName);\r\n    pm.expect(response.lastname).to.eql(lastName);\r\n    pm.expect(response.totalprice).to.eql(150);\r\n    pm.expect(response.depositpaid).to.eql(true);\r\n    pm.expect(response.bookingdates.checkin).to.eql(\"2018-01-15\");\r\n    pm.expect(response.bookingdates.checkout).to.eql(\"2018-01-20\");\r\n    pm.expect(response.additionalneeds).to.eql(\"Breakfast\");\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/booking/{{bookingID}}",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingID}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get all booking IDs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"Response time is less than 3000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(3000);\r\n});\r\n\r\npm.test(\"Response JSON is not empty\", function () {\r\n    const jsonData = pm.response.json();\r\n    pm.expect(jsonData).to.not.be.empty;\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/booking",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get booking ID by name",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"Response time is less than 3000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(3000);\r\n});\r\n\r\npm.test(\"Correct ID is returned\", function () {\r\n    const response = pm.response.json();\r\n    const bookingID = pm.collectionVariables.get(\"bookingID\");\r\n\r\n    pm.expect(response[0].bookingid).to.eql(bookingID);\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/booking?firstname={{firstName}}&lastname={{lastName}}",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "booking"
+              ],
+              "query": [
+                {
+                  "key": "firstname",
+                  "value": "{{firstName}}"
+                },
+                {
+                  "key": "lastname",
+                  "value": "{{lastName}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Update requests",
+      "item": [
+        {
+          "name": "Update booking (PUT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const response = pm.response.json();\r\n\r\npm.test(\"Status code is 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"Response time is less than 3000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(3000);\r\n});\r\n\r\npm.test(\"Verify that total price and additional needs value are updated\", function () {\r\n    pm.expect(response.totalprice).to.eql(200);\r\n    pm.expect(response.additionalneeds).to.eql(\"Breakfast, Lunch\");\r\n});\r\n\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "cookie",
+                "value": "token={{vault:token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"firstname\" : \"{{firstName}}\",\r\n    \"lastname\" : \"{{lastName}}\",\r\n    \"totalprice\" : 200,\r\n    \"depositpaid\" : true,\r\n    \"bookingdates\" : {\r\n        \"checkin\" : \"2018-01-15\",\r\n        \"checkout\" : \"2018-01-20\"\r\n    },\r\n    \"additionalneeds\" : \"Breakfast, Lunch\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/booking/{{bookingID}}",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingID}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update booking (PUT) that does not exist",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// The api should've returned a 404 status code when updating something that doesn't exist\r\npm.test(\"Status code is 404\", function () {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\npm.test(\"Response time is less than 3000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(3000);\r\n});\r\n\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "cookie",
+                "value": "token={{vault:token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"firstname\" : \"{{firstName}}\",\r\n    \"lastname\" : \"{{lastName}}\",\r\n    \"totalprice\" : 200,\r\n    \"depositpaid\" : true,\r\n    \"bookingdates\" : {\r\n        \"checkin\" : \"2018-01-15\",\r\n        \"checkout\" : \"2018-01-20\"\r\n    },\r\n    \"additionalneeds\" : \"Breakfast, Lunch\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/booking/{{nonexistingID}}",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "booking",
+                "{{nonexistingID}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update booking (PUT) with incorrect token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {\r\n    pm.response.to.have.status(403);\r\n});\r\n\r\npm.test(\"Response time is less than 3000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(3000);\r\n});\r\n\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "cookie",
+                "value": "token={{incorrectToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"firstname\" : \"{{firstName}}\",\r\n    \"lastname\" : \"{{lastName}}\",\r\n    \"totalprice\" : 200,\r\n    \"depositpaid\" : true,\r\n    \"bookingdates\" : {\r\n        \"checkin\" : \"2018-01-15\",\r\n        \"checkout\" : \"2018-01-20\"\r\n    },\r\n    \"additionalneeds\" : \"Breakfast, Lunch\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/booking/{{bookingID}}",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingID}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update booking (PATCH)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const randomFirstName = pm.variables.replaceIn('{{\\$randomFirstName}}');\r\nconst randomLastName  = pm.variables.replaceIn('{{\\$randomLastName}}');\r\n\r\npm.collectionVariables.set(\"firstName\", randomFirstName);\r\npm.collectionVariables.set(\"lastName\", randomLastName);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const response = pm.response.json();\r\nconst firstName = pm.collectionVariables.get(\"firstName\");\r\nconst lastName = pm.collectionVariables.get(\"lastName\");\r\n\r\npm.test(\"Status code is 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"Response time is less than 3000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(3000);\r\n});\r\n\r\npm.test(\"Verify that first name and last name are updated\", function () {\r\n    pm.expect(response.firstname).to.eql(firstName);\r\n    pm.expect(response.lastname).to.eql(lastName);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{vault:token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"firstname\": \"{{firstName}}\",\r\n    \"lastname\": \"{{lastName}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/booking/{{bookingID}}",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingID}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update booking (PATCH) that does not exist",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// The api should've returned a 404 status code when updating something that doesn't exist\r\npm.test(\"Status code is 404\", function () {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\npm.test(\"Response time is less than 3000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(3000);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{vault:token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"firstname\": \"{{firstName}}\",\r\n    \"lastname\": \"{{lastName}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/booking/{{nonexistingID}}",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "booking",
+                "{{nonexistingID}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update booking (PATCH) with incorrect token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {\r\n    pm.response.to.have.status(403);\r\n});\r\n\r\npm.test(\"Response time is less than 3000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(3000);\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{incorrectToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"firstname\": \"{{firstName}}\",\r\n    \"lastname\": \"{{lastName}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/booking/{{bookingID}}",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingID}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Delete requests",
+      "item": [
+        {
+          "name": "Delete non-existing booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// It is probably better if the API returns a 404 status code\r\npm.test(\"Status code is 404\", function () {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\npm.test(\"Response time is less than 3000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(3000);\r\n});\r\n\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{vault:token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseURL}}/booking/{{nonexistingID}}",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "booking",
+                "{{nonexistingID}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete existing booking with incorrect token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {\r\n    pm.response.to.have.status(403);\r\n});\r\n\r\npm.test(\"Response time is less than 3000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(3000);\r\n});"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const deletedID = pm.collectionVariables.get(\"bookingID\");\r\npm.collectionVariables.set(\"nonexistingID\", deletedID);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{incorrectToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseURL}}/booking/{{bookingID}}",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingID}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete existing booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// The API should've returned a 204 status code, not a 201\r\npm.test(\"Status code is 204\", function () {\r\n    pm.response.to.have.status(204);\r\n});\r\n\r\npm.test(\"Response time is less than 3000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(3000);\r\n});"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const deletedID = pm.collectionVariables.get(\"bookingID\");\r\npm.collectionVariables.set(\"nonexistingID\", deletedID);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{vault:token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseURL}}/booking/{{bookingID}}",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingID}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get a non-existing/previously deleted booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\npm.test(\"Response time is less than 3000ms\", function () {\r\n    pm.expect(pm.response.responseTime).to.be.below(3000);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/booking/{{nonexistingID}}",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "booking",
+                "{{nonexistingID}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseURL",
+      "value": "https://restful-booker.herokuapp.com"
+    },
+    {
+      "key": "incorrectToken",
+      "value": "thisisanincorrecttoken"
+    },
+    {
+      "key": "nonexistingID",
+      "value": "123654"
+    }
+  ]
+}
